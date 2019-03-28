@@ -1,3 +1,4 @@
+/*
 const http = require('http');
 
 const hostname = '127.0.0.1';
@@ -12,4 +13,34 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`);
+});*/
+
+
+// 익스프레스로 변경
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+   res.send('Hello World\n');
 });
+
+app.listen(3000, () => {
+    console.log('Example app listening on port 3000');
+});
+
+let users = [
+    {
+        id: 1,
+        name: 'alice'
+    },
+    {
+        id: 2,
+        name: 'bek'
+    },
+    {
+        id: 3,
+        name: 'chris'
+    }
+]
+
+app.get('/users', (req, res) => res.json(users));
