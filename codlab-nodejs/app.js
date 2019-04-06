@@ -18,16 +18,12 @@ server.listen(port, hostname, () => {
 
 // 익스프레스로 변경
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
 
-const bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({extended: true})); // for parsing application/x-www-form-urlencoded
 
 app.use('/users', require('./api/users'));
-
-app.listen(3000, () => {
-    console.log('Example app listening on port 3000');
-});
 
 module.exports = app;
