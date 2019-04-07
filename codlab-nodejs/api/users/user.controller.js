@@ -43,9 +43,9 @@ exports.destroy = (req, res) => {
         }
     }).then( count => {
         if(!count) {
-            return res.stats(404).send({error: 'No user'});
+            return res.status(404).send({error: 'No user'});
         }
-        res.stat(204).send()
+        res.status(204).send()
     });
 
 /*    const userIdx = users.findIndex(user => user.id === id);
@@ -58,14 +58,14 @@ exports.destroy = (req, res) => {
 };
 
 exports.create = (req, res) => {
-    const name = req.body.name || '';
+    const name = req.body.name.toString().trim() || '';
     if (!name.length) {
         return res.status(400).json({error: 'Incorrect name'});
     }
 
     models.User.create({
         name: name
-    }).then((user) => res.stats(201).json(user));
+    }).then((user) => res.status(201).json(user));
 /*
     const id = users.reduce((maxId, user) => {
         return user.id > maxId ? user.id : maxId;

@@ -6,22 +6,27 @@ const syncDatabase = require('../../bin/sync-db');
 const models = require('../../models');
 
 describe('GET /users', () => {
-    before('sync database', done => {
-        syncDatabase().then(() => {
-            done();
-        });
-    });
-
     const users = [
         {name: 'alice'},
         {name: 'bek'},
         {name: 'chris'}
     ];
 
+    before('sync database', done => {
+        syncDatabase().then(_ => done());
+    });
+
     before('insert 3 users into database', done => {
         models.User.bulkCreate(users).then(() => done());
     });
 
+    after('delete seed user data', done => {
+        models.User.destroy({
+            where: {
+                name: users.map(user => user.name)
+            }
+        }).done(_ => done());
+    });
 
     it('should return 200 status code', (done) => {
         request(app)
@@ -38,13 +43,27 @@ describe('GET /users', () => {
                 done();
             });
     });
-
-    after('clear up database', done => {
-        syncDatabase().then(() => done);
-    });
 });
 
 describe('GET /users/:id', () => {
+    const users = [{name: 'Alice'}];
+
+    before('sync database', done => {
+        syncDatabase().then(_ => done());
+    });
+
+    before('Insert seed user data', done => {
+        models.User.bulkCreate(users).then(_ => done());
+    });
+
+    after('delete seed user data', done => {
+        models.User.destroy({
+            where: {
+                name: users.map(user => user.name)
+            }
+        }).done(_ => done());
+    });
+
     it('should return 200 status code and user object', done => {
         request(app)
             .get('/users/1')
@@ -64,7 +83,7 @@ describe('GET /users/:id', () => {
             .get('/users/abc')
             .expect(400)
             .end((err, res) => {
-                if(err) throw err;
+                if (err) throw err;
                 res.body.should.have.property('error');
                 done();
             });
@@ -72,17 +91,21 @@ describe('GET /users/:id', () => {
 
     it('should return 404 status code on no user', done => {
         request(app)
-            .get('/users/5')
+            .get('/users/2')
             .expect(404)
             .end((err, res) => {
-                if(err) throw err;
+                if (err) throw err;
                 res.body.should.have.property('error');
                 done();
-            })
-    })
+            });
+    });
 });
 
 describe('POST /users', () => {
+    before('Sync database', done => {
+        syncDatabase().then(_ => done())
+    });
+
     it('should return 201 status code and new user object', done => {
         const name = 'daniel';
 
@@ -94,22 +117,137 @@ describe('POST /users', () => {
             })
             .end((err, res) => {
                 if (err) throw err;
-                res.body.should.have.property('id', 4);
+                res.body.should.have.property('id', 1);
                 res.body.should.have.property('name', name);
                 done();
             });
     });
-})
 
-describe('PUT /users/:id', () => {
-    it('should return 200 status code', done => {
+    it('Should return 400 status code on string id', done => {
         request(app)
-            .put('/users/1')
+            .post('/users')
+            .expect(400)
             .send({
-                name: 'foo'
+                name: ' '
             })
             .end((err, res) => {
                 if (err) throw err;
+                res.body.should.have.property('error');
+                done();
+            });
+    });
+});
+
+describe('PUT /users/:id', () => {
+    const users = [{name: 'Alice'}];
+
+    beforeEach('Sync database', done => {
+        syncDatabase().then(_ => done());
+
+    });
+
+    beforeEach('Insert seed user data', done => {
+        models.User.bulkCreate(users).then(_ => done());
+    });
+
+    afterEach('delete seed user data', done => {
+        models.User.destroy({
+            where: {
+                name: users.map(user => user.name)
+            }
+        }).done(_ => done());
+    });
+
+    it('should return 200 status code', done => {
+        const name = 'Daniel';
+
+        request(app)
+            .put('/users/1')
+            .expect(200)
+            .send({
+                name: name
+            })
+            .end((err, res) => {
+                if (err) throw err;
+                res.body.should.have.property('id', 1);
+                res.body.should.have.property('name', name);
+                done();
+            });
+    });
+
+    it('should return 400 status code with empty name', done => {
+        request(app)
+            .put('/users/1')
+            .expect(400)
+            .send({
+                name: ' '
+            })
+            .end((err, res) => {
+                if (err) throw err;
+                res.body.should.have.property('error');
+                done();
+            });
+    });
+
+    it('should return 404 status code on no user', done => {
+        request(app)
+            .put('/users/2')
+            .expect(404)
+            .end((err, res) => {
+                if (err) throw err;
+                res.body.should.have.property('error');
+                done();
+            });
+
+    });
+});
+
+describe('DELETE /users/:id', () => {
+    const users = [{name: 'Alice'}];
+
+    beforeEach('Sync database', done => {
+        syncDatabase().then(_ => done());
+    });
+
+    beforeEach('Insert seed user data', done => {
+        models.User.bulkCreate(users).then(_ => done());
+    });
+
+    afterEach('delete seed user data', done => {
+        models.User.destroy({
+            where: {
+                name: users.map(user => user.name)
+            }
+        }).done(_ => done());
+    });
+    it('should return 204 status code', done => {
+        request(app)
+            .delete('/users/1')
+            .expect(204)
+            .end((err, res) => {
+                if (err) throw err;
+                done();
+            });
+    });
+
+    it('should return 400 status code on string id', done => {
+        request(app)
+            .delete('/users/abc')
+            .expect(400)
+            .end((err, res) => {
+                if (err) throw err;
+                res.body.should.have.property('error');
+                done();
+            });
+    });
+
+    it('should return 404 status code on no user', done => {
+        request(app)
+            .delete('/users/2')
+            .expect(404)
+            .end((err, res) => {
+                if (err) throw err;
+                res.body.should.have.property('error');
                 done();
             });
     });
